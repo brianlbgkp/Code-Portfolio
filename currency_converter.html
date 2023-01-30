@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Assignment 5 Part 1</title>
+	
+    <script>
+	function euro() {
+		var usDollar=document.getElementById("usd").value;
+		var euro=parseFloat(usDollar*0.76);
+        var statement = 'For $' + usDollar + ' US Dollars, you will get ' + euro.toFixed(2) + ' Euros.';
+		document.getElementById('euro').innerHTML=statement
+	}
+	
+	function pound() {
+		var usDollar=document.getElementById("usd").value;
+		var pound=parseFloat(usDollar*0.62);
+        var statement = 'For $' + usDollar + ' US Dollars, you will get ' + pound.toFixed(2) + ' British Pounds.';
+		document.getElementById('pound').innerHTML=statement;
+	}
+	
+	function peso() {
+		var usDollar=document.getElementById("usd").value;
+		var peso=parseFloat(usDollar*13.23);
+        var statement = 'For $' + usDollar + ' US Dollars, you will get ' + peso.toFixed(2) + ' Mexican Pesos.';
+		document.getElementById('peso').innerHTML=statement;
+	}
+	</script>
+</head>
+    
+<body>
+
+	<div="header">
+	<h1>Currency Converter!</h1>
+	<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcQ11CZaPSMegmgjzvDVNqOEh0KS_g4hs54prKPiYoZilR1m0AF6" alt="Euro" width="100" height="100">
+	<img src="https://cdn3.iconfinder.com/data/icons/web-and-user-interface-5/48/202-512.png" alt="British Pound" width="100" height="100">
+	<img src="https://banner2.kisspng.com/20180613/fyt/kisspng-currency-symbol-mexican-peso-cuban-peso-cuban-peso-5b214e788b04d2.1402380315289094325694.jpg" alt="Mexican Peso" width="100" height="100">
+	</div>
+	
+	<div="main">
+	
+	<form>
+	
+	<p>Type in the amount in USD you wish to convert</p>
+	<input type="text" id="usd" autofocus="autofocus" step='0.01'>
+	
+	
+    <p><input type='button' onclick="euro()" value="Convert to Euro"></p>
+	<p><input type='button' onclick="pound()" value="Convert to British Pounds"></p>
+	<p><input type='button' onclick="peso()" value="Convert to Mexican Peso"></p>
+	
+	<br>
+	
+	<p id='euro'></p>
+    <p id='pound'></p>
+    <p id='peso'></p>
+
+	
+	</form>
+	
+	</div>
+
+
+</body>
+</html>
+    

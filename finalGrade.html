@@ -1,0 +1,37 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Grade</title>
+
+    <script>
+        function finalScore(){
+            var hwScore = document.getElementById("hw").value;
+            var midScore=document.getElementById("mid").value;
+            var finScore=document.getElementById("final").value;
+            var finalGrade = 0;
+            finalGrade=(hwScore/200*50)+(midScore/100*20)+(finScore/100*30);
+            document.getElementById('fin').innerHTML=finalGrade;
+        }
+    </script>
+</head>
+
+<body>
+    <div id="main_content">
+    <h1>Final Grade Calculator</h1>
+    
+    <p>Please input your scores!</p>
+    <p>Your HW score:</p>
+    <input type="text" id="hw">/200
+    <p>Your midterm exam score:</p>
+    <input type="text" id="mid">/100
+    <p>Your final exam score:</p>
+    <input type="text" id="final">/100
+    <br>
+    <button type="button" onclick="finalScore()">Calculate Your Final Grade</button>
+    <p>Your Final Grade is:</p>
+    <p id='fin'></p>
+    </div>
+</body>
+</html>   

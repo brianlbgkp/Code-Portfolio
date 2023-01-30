@@ -1,0 +1,194 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Pizza!</title>
+    
+    <link rel="stylesheet" type="text/css" href="pizzaStyle.css">
+    
+    <style>
+    .btn {
+    background-color:blue;
+    color:yellow;
+        }
+    </style>
+    
+    <script>
+    function order(){
+        var name = document.getElementById("name").value;
+        var address = document.getElementById("address").value;
+        var phone = document.getElementById("phoneNumber").value;
+        var email = "";
+        if(document.getElementById("mail1").checked){
+            email=" You have also subscribed to our e-mail list and your email is " + document.getElementById("email").value; + ".";
+        }
+        var specReq = document.getElementById("sRequests").value;
+        if (specReq==""){
+            specReq="No Special Instructions";
+        }
+        var size = document.getElementById("size").value;
+        var sizeType = "";
+        
+        if (size == 6){
+            sizeType = "Personal"
+        }
+        else if (size==9){
+            sizeType= "Medium"
+        }
+        else if(size==12){
+            sizeType="Large"
+        }
+        else{
+            sizeType="Extra Large"
+        }
+        
+        var drinks = document.getElementById("num_drinks").value;
+        var desserts = parseFloat(document.getElementById("num_desserts").value) * 3;
+        var top1 = document.getElementById("top1").checked ? .50 : 0;
+        var top2 = document.getElementById("top2").checked ? .50 : 0;
+        var top3 = document.getElementById("top3").checked ? .50 : 0;
+        var toppings = top1+ top2+ top3;
+        var topType1="";
+        var topType2="";
+        var topType3="";
+        var none = "";
+        if (top1 == .50)
+            {
+                topType1="Mushrooms ";
+            }
+        if (top2 == .50)
+            {
+                topType2="Olives "
+            }
+        if (top3 == .50)
+            {
+                topType3="Sausages"
+            }
+        if (top1==0 && top2==0 && top3==0)
+            {
+            none="No Toppings"
+            }
+        var totalCost = parseFloat(size) + parseFloat(drinks) + parseFloat(desserts) + toppings;
+        var coupon = "";
+        if (totalCost >= 25){
+            coupon=" Congratulations you just earned a coupon for spending over $25! Your code is 'Q1358'.";
+        }
+        var d = new Date();
+        let options = {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        document.getElementById("confirmation").innerHTML = "Thank you " + name + "! Your total cost is $" + totalCost + ". We have your address as " + address + ", your phone number is " + phone + ". You ordered a " + sizeType + " pizza. With " + topType1 + topType2 + topType3 + none + ". You ordered " + drinks + " drinks and " + document.getElementById("num_desserts").value + " desserts. Special Instructions are: '" + specReq + "'. Time of your order is: " + d.toLocaleDateString('en-us',options) + "." + coupon + email;
+        event.preventDefault()
+    }
+    </script>
+
+</head>
+    
+<body>
+
+    <div id="header">
+    <h1>Pizza Hole</h1>
+    <h2>"Pizza as deep as this hole!"</h2>
+    <img src="pizza_hole.jpg" alt="Pizza Hole Logo" style="width:300px;height:200px;">
+    </div>
+    
+    <br>
+    
+    <div id="main_body">
+        
+    <form>
+        
+    <p>Name:</p>
+    <input type="text" id="name">
+        
+    <p>Address:</p>
+    <input type='text' id='address'>
+        
+    <p>Phone Number:</p>
+    <input type="text" id="phoneNumber">
+        
+    <p>Email Address: </p>
+    <input type='text' id="email">
+        
+    <p>Select a Size:<select id="size">
+        <option value=6>Personal($6)</option>
+        <option value=9>Medium($9)</option>
+        <option value=12>Large($12)</option>
+        <option value=16>Extra Large($16)</option>
+        </select>
+    </p>
+        
+    <p>Extra Toppings:</p>
+    <p>Mushrooms($.50)<input type="checkbox" value="Mushrooms," id="top1" name="chk_toppings"></p>
+    <p>Olives($.50)<input type="checkbox" value="Olives" id="top2" name="chk_toppings"></p>
+    <p>Sausage($.50)<input type="checkbox" value=",Sausages" id="top3" name="chk_toppings"></p>
+        
+    <p>How many drinks would you like? ($1 Each) <select id="num_drinks">
+        <option value=0>0</option>
+        <option value=1>1</option>
+        <option value=2>2</option>
+        <option value=3>3</option>
+        <option value=4>4</option>
+        </select>
+    </p>
+        
+    <p>How many desserts would you like? ($3 Each) <select id="num_desserts">
+        <option value=0>0</option>
+        <option value=1>1</option>
+        <option value=2>2</option>
+        <option value=3>3</option>
+        <option value=4>4</option>
+        </select>
+    </p>
+    
+
+    <p>Special Requests:</p>
+    <input type="text" id="sRequests">
+    
+    <p>Would you like to be added to our e-mail list? Yes!<input type="radio" name="eList" id="mail1" value="yes" checked> No<input type="radio" name="eList" id="mail2" value="no"></p>
+    
+    <button type='button' onclick="order()" class="btn">Submit Order</button>
+        
+    <p id='confirmation'></p>
+        
+    </form>
+    </div>
+    
+<br>
+<br>
+        
+      <!--
+    <div id="Mailing_List_Header">
+        <h3>Pizza Hole Mailing List!</h1>
+    </div>
+    
+    <div id="Mailing_List_Main_Content">
+
+        <p>First Name:</p>
+        <input type="text">
+        <p>Last Name:</p>
+        <input type="text">
+        <p>Email Address:</p>
+        <input type="text">
+        <p>Phone Number:</p>
+        <input type="text">
+        <br>
+        <p>Would you like to be added to our mailing list?</p>
+        <input type="radio" name="emailList" checked='checked'>Yes
+        <input type="radio" name="emailList">No
+        <p>By opting in you agree to receive periodic emails regarding specials and promotions. </p>
+
+        <button onclick="alert('Thank You! You have successfully submitted your information!')">Submit</button>
+        
+    </div>
+    -->
+    <br>
+    
+    <div id="footer">
+        <h6>Address: 1234 North 12st | Phone Number: (123) 456-7890</h6>
+    </div>
+</body>
+</html>
