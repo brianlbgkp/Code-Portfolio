@@ -1,0 +1,42 @@
+body {
+    background-color: whitesmoke;
+}
+
+form {
+    background-color: floralwhite;
+}
+
+#header {
+    text-align: center;
+    color:darkblue;
+    font-family: serif;
+    border-bottom-style: solid;
+    border-bottom-color: cornflowerblue;
+}
+
+#nav{
+    font-weight: bold;
+    text-align: center;
+    border: 3px solid lightblue;
+    background-color: aliceblue;
+}
+
+#footer {
+    background-color: cornsilk;
+    font-family: verdana;
+    font-size: 15px;
+    font-style: italic;
+}
+
+#homeP {
+    text-align: center;
+}
+
+#contact {
+    font-family: serif;
+    background-color: floralwhite;
+}
+
+#logo {
+    border-radius: 8px;
+}
