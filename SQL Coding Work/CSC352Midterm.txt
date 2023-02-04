@@ -1,0 +1,405 @@
+Brian Salinas
+05/04/2022
+CSC 352
+Midterm
+
+Part I,
+
+1.	True
+2.	True
+3.	True
+4.	True
+5.	False
+6.	True
+
+Part II
+
+1. B;
+2. B;
+
+-- Part III.
+
+REM Q1.
+
+set serveroutput on 
+
+DECLARE
+     str  varchar2 (80);
+     count1 NUMBER := 1;
+     count2 NUMBER := 1;
+BEGIN
+    LOOP
+        EXIT WHEN count1 > 9;
+        
+        LOOP
+            EXIT WHEN count2 > 9;
+            str := str || ' ' || count1 || count2 ;
+            
+            count2 := count2 + 1;
+        END LOOP;
+        
+        DBMS_OUTPUT.PUT_LINE( '|' || str || ' |');
+        
+        count1 := count1 + 1;
+        
+        str := null;
+        count2 := 1;
+    END LOOP;
+END;
+
+[OUTPUT]
+
+| 11 12 13 14 15 16 17 18 19 |
+| 21 22 23 24 25 26 27 28 29 |
+| 31 32 33 34 35 36 37 38 39 |
+| 41 42 43 44 45 46 47 48 49 |
+| 51 52 53 54 55 56 57 58 59 |
+| 61 62 63 64 65 66 67 68 69 |
+| 71 72 73 74 75 76 77 78 79 |
+| 81 82 83 84 85 86 87 88 89 |
+| 91 92 93 94 95 96 97 98 99 |
+
+
+PL/SQL procedure successfully completed.
+
+-- Q2. 
+
+set serveroutput on 
+
+DECLARE
+     CURSOR c_emp (min_sal NUMBER) IS
+        SELECT employee_id, first_name, last_name, salary
+        FROM employees
+        WHERE salary < min_sal + 1;
+    v_empid     employees.employee_id%TYPE;
+    v_fname     employees.first_name%TYPE;
+    v_lname     employees.last_name%TYPE;
+    v_sal       employees.salary%TYPE;
+BEGIN
+    OPEN    c_emp(2600);
+    DBMS_OUTPUT.PUT_LINE('Minimum Salary: $2600 [BASIC LOOP]');
+    
+    LOOP
+        FETCH c_emp INTO v_empid, v_fname, v_lname, v_sal;
+        EXIT WHEN c_emp%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Employee_id: ' || v_empid || ' Name: ' || v_lname 
+        || ', ' || v_fname || ' Salary: ' || TO_CHAR(v_sal, '$99,999'));
+        
+    END LOOP;
+    CLOSE c_emp;
+    
+    DBMS_OUTPUT.PUT_LINE(' ');
+    DBMS_OUTPUT.PUT_LINE('Minimum Salary: $25000 [FOR LOOP]');
+    
+    FOR indx IN c_emp(2500) LOOP
+        DBMS_OUTPUT.PUT_LINE('Employee_id: ' || indx.employee_id || ' Name: ' || indx.last_name 
+        || ', ' || indx.first_name || ' Salary: ' || TO_CHAR(indx.salary, '$99,999'));
+    END LOOP;
+    
+END;
+
+
+[OUTPUT]
+
+
+Minimum Salary: $2600 [BASIC LOOP]
+Employee_id: 118 Name: Himuro, Guy Salary:   $2,600
+Employee_id: 119 Name: Colmenares, Karen Salary:   $2,500
+Employee_id: 127 Name: Landry, James Salary:   $2,400
+Employee_id: 128 Name: Markle, Steven Salary:   $2,200
+Employee_id: 131 Name: Marlow, James Salary:   $2,500
+Employee_id: 132 Name: Olson, TJ Salary:   $2,100
+Employee_id: 135 Name: Gee, Ki Salary:   $2,400
+Employee_id: 136 Name: Philtanker, Hazel Salary:   $2,200
+Employee_id: 140 Name: Patel, Joshua Salary:   $2,500
+Employee_id: 143 Name: Matos, Randall Salary:   $2,600
+Employee_id: 144 Name: Vargas, Peter Salary:   $2,500
+Employee_id: 182 Name: Sullivan, Martha Salary:   $2,500
+Employee_id: 191 Name: Perkins, Randall Salary:   $2,500
+Employee_id: 198 Name: OConnell, Donald Salary:   $2,600
+Employee_id: 199 Name: Grant, Douglas Salary:   $2,600
+ 
+Minimum Salary: $25000 [FOR LOOP]
+Employee_id: 119 Name: Colmenares, Karen Salary:   $2,500
+Employee_id: 127 Name: Landry, James Salary:   $2,400
+Employee_id: 128 Name: Markle, Steven Salary:   $2,200
+Employee_id: 131 Name: Marlow, James Salary:   $2,500
+Employee_id: 132 Name: Olson, TJ Salary:   $2,100
+Employee_id: 135 Name: Gee, Ki Salary:   $2,400
+Employee_id: 136 Name: Philtanker, Hazel Salary:   $2,200
+Employee_id: 140 Name: Patel, Joshua Salary:   $2,500
+Employee_id: 144 Name: Vargas, Peter Salary:   $2,500
+Employee_id: 182 Name: Sullivan, Martha Salary:   $2,500
+Employee_id: 191 Name: Perkins, Randall Salary:   $2,500
+
+
+PL/SQL procedure successfully completed.
+
+-- Q3.
+
+SET SERVEROUTPUT ON
+DECLARE
+    CURSOR c IS
+        SELECT SALARY, EMPLOYEE_ID, HIRE_DATE
+        FROM EMPLOYEES
+        WHERE DEPARTMENT_ID = 60;
+    variable_list   c%ROWTYPE;
+    bonus           FLOAT;
+    total_bonus     FLOAT;
+BEGIN
+    total_bonus := 0;
+    OPEN c;
+        LOOP
+        FETCH c into variable_list;
+        EXIT WHEN c%NOTFOUND;
+        
+        IF floor(MONTHS_BETWEEN(SYSDATE, variable_list.HIRE_DATE) / 12) >= 29  
+        THEN
+            IF variable_list.SALARY >= 8000 THEN
+                bonus := 3000;
+            ELSIF variable_list.SALARY >= 5000 THEN
+                bonus := 2000;
+            ELSE
+                bonus := 1500;
+            END IF;
+        ELSIF floor(MONTHS_BETWEEN(SYSDATE, variable_list.HIRE_DATE) / 12) < 29 
+        AND floor(MONTHS_BETWEEN(SYSDATE, variable_list.HIRE_DATE) / 12) >= 24 
+        THEN
+            IF variable_list.SALARY >= 8000 THEN
+                bonus := 2000;
+            ELSIF variable_list.SALARY >= 4000 THEN
+                bonus := 1500;
+            ELSE
+                bonus := 1000;
+            END IF;
+        ELSIF floor(MONTHS_BETWEEN(SYSDATE, variable_list.HIRE_DATE) / 12) < 24 
+        AND floor(MONTHS_BETWEEN(SYSDATE, variable_list.HIRE_DATE) / 12) >= 23 
+        THEN
+            IF variable_list.SALARY >= 7000 THEN
+                bonus := 1500;
+            ELSIF variable_list.SALARY >= 5000 THEN
+                bonus := 1200;
+            ELSE
+                bonus := 900;
+            END IF;
+        ELSE
+            bonus := 500;
+        END IF;
+        
+        total_bonus := total_bonus + bonus;
+        
+        DBMS_OUTPUT.PUT_LINE('Employee ID: ' || variable_list.EMPLOYEE_ID || 
+        ' Years Worked: ' || floor(MONTHS_BETWEEN(SYSDATE, 
+        variable_list.HIRE_DATE) / 12) || ' Current Salary: ' || 
+        TO_CHAR(variable_list.SALARY, '$999,999') || ' Bonus: ' || TO_CHAR(bonus, '$999,999'));
+        
+        bonus := 0;
+        END LOOP;
+    CLOSE c;
+    
+    DBMS_OUTPUT.PUT_LINE(' ');
+    DBMS_OUTPUT.PUT_LINE('Total Bonus for Department 60: ' || TO_CHAR(total_bonus, '$999,999'));
+END;
+
+[OUTPUT]
+
+Employee ID: 103 Years Worked: 32 Current Salary:    $9,000 Bonus:    $3,000
+Employee ID: 104 Years Worked: 30 Current Salary:    $6,000 Bonus:    $2,000
+Employee ID: 105 Years Worked: 24 Current Salary:    $4,800 Bonus:    $1,500
+Employee ID: 106 Years Worked: 24 Current Salary:    $4,800 Bonus:    $1,500
+Employee ID: 107 Years Worked: 23 Current Salary:    $4,200 Bonus:      $900
+ 
+Total Bonus for Department 60:    $8,900
+
+
+PL/SQL procedure successfully completed.
+
+-- Q4. 
+
+SET SERVEROUTPUT ON
+DROP TABLE log_error;
+
+CREATE TABLE log_error (
+  Error_date  DATE DEFAULT SYSDATE,
+  Username    VARCHAR2 (15) DEFAULT USER,
+  Err_code    NUMBER,
+  Err_msg     VARCHAR2 (255));
+
+DECLARE
+    Err_code    NUMBER;
+    Err_msg     VARCHAR2 (255);
+BEGIN
+    INSERT INTO DEPARTMENTS 
+    VALUES (120, 'Future', null, 1700);
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        Err_code := SQLCODE;
+        Err_msg := SUBSTR(SQLERRM, 1, 64);
+        
+        DBMS_OUTPUT.PUT_LINE('Error code ' || Err_code || ': ' || Err_msg);
+        
+        INSERT INTO log_error (Err_code, Err_msg)
+        VALUES (Err_code, Err_msg);
+END;
+
+[OUTPUT]
+
+Table LOG_ERROR dropped.
+
+
+Table LOG_ERROR created.
+
+Error code -1: ORA-00001: unique constraint (BSALINA3.DEPT_ID_PK) violated
+
+
+PL/SQL procedure successfully completed.
+
+
+[TABLE OUTPUT]
+
+ERROR_DATE  USERNAME	ERR_CODE	ERR_MSG
+
+04-MAY-22	BSALINA3	-1		ORA-00001: unique constraint (BSALINA3.DEPT_ID_PK) violated
+
+
+-- Q5.
+
+SET SERVEROUTPUT ON
+DECLARE
+    TYPE DeptTyp IS REF CURSOR RETURN departments%ROWTYPE;
+    Dept_curvar     DeptTyp;
+    v_departments   departments%ROWTYPE;
+
+BEGIN
+
+    OPEN Dept_curvar for SELECT * FROM departments WHERE location_id != 1700;
+    
+    LOOP
+        FETCH Dept_curvar INTO v_departments;
+        EXIT WHEN Dept_curvar%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Department ID: ' || RPAD(v_departments.department_id, 6) || 
+        ' Department Name: ' || RPAD(v_departments.department_name, 16) || 
+        ' Manager ID: ' || v_departments.manager_id);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('--------------------------');
+        
+    OPEN Dept_curvar for SELECT* FROM departments WHERE manager_id IS NOT null;
+
+    LOOP
+        FETCH Dept_curvar INTO v_departments;
+        EXIT WHEN Dept_curvar%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Department ID: ' || RPAD(v_departments.department_id, 6) || 
+        ' Department Name: ' || RPAD(v_departments.department_name, 16) || 
+        ' Manager ID: ' || v_departments.manager_id);
+    END LOOP;
+
+END;
+
+[OUTPUT]
+
+Department ID: 20     Department Name: Marketing        Manager ID: 201
+Department ID: 40     Department Name: Human Resources  Manager ID: 203
+Department ID: 50     Department Name: Shipping         Manager ID: 121
+Department ID: 60     Department Name: IT               Manager ID: 103
+Department ID: 70     Department Name: Public Relations Manager ID: 204
+Department ID: 80     Department Name: Sales            Manager ID: 145
+--------------------------
+Department ID: 10     Department Name: Administration   Manager ID: 200
+Department ID: 20     Department Name: Marketing        Manager ID: 201
+Department ID: 30     Department Name: Purchasing       Manager ID: 114
+Department ID: 40     Department Name: Human Resources  Manager ID: 203
+Department ID: 50     Department Name: Shipping         Manager ID: 121
+Department ID: 60     Department Name: IT               Manager ID: 103
+Department ID: 70     Department Name: Public Relations Manager ID: 204
+Department ID: 80     Department Name: Sales            Manager ID: 145
+Department ID: 90     Department Name: Executive        Manager ID: 100
+Department ID: 100    Department Name: Finance          Manager ID: 108
+Department ID: 110    Department Name: Accounting       Manager ID: 205
+
+
+PL/SQL procedure successfully completed.
+
+-- Q6.
+
+
+SET SERVEROUTPUT ON
+DECLARE
+    TYPE Lastname_list IS TABLE OF EMPLOYEES.LAST_NAME%TYPE;
+    
+    last_names      Lastname_list := Lastname_list();
+    
+    CURSOR c_lnames IS SELECT last_name FROM EMPLOYEES WHERE department_id = 30
+    OR department_id = 20;
+    
+    indx3           NUMBER;
+    
+BEGIN
+
+    FOR indx IN c_lnames
+    LOOP
+        last_names.EXTEND;
+        last_names(last_names.LAST) := indx.last_name;
+    END LOOP;
+    
+    FOR indx2 IN last_names.FIRST..last_names.LAST
+    LOOP
+        DBMS_OUTPUT.PUT_LINE(RPAD(indx2,3) || last_names(indx2));
+    END LOOP;
+    
+    DBMS_OUTPUT.PUT_LINE(' ');
+    DBMS_OUTPUT.PUT_LINE('Value of Last Index in Nested Table: ' || 
+    RPAD(last_names.LAST, 3) || ' Last Name at index: ' || 
+    last_names(last_names.LAST)); 
+    
+    last_names.EXTEND;
+    last_names(last_names.LAST) := 'Lincoln';
+    
+    last_names.DELETE(4,5);
+    /*last_names.DELETE(5);*/
+    
+    DBMS_OUTPUT.PUT_LINE(' ');
+    DBMS_OUTPUT.PUT_LINE(
+    'Size of Nested Table after deletion of elements 4, 5 is: ' 
+    || last_names.count);
+    
+    DBMS_OUTPUT.PUT_LINE(' ');
+    DBMS_OUTPUT.PUT_LINE('Value of Last Index in Nested Table: ' || 
+    RPAD(last_names.LAST, 3) || ' Last Name at index: ' || 
+    last_names(last_names.LAST)); 
+    
+    DBMS_OUTPUT.PUT_LINE(' ');
+    indx3 := last_names.FIRST;
+    WHILE(indx3 IS NOT NULL) LOOP
+        DBMS_OUTPUT.PUT_LINE(RPAD(indx3, 3) || last_names(indx3));
+        indx3 := last_names.NEXT(indx3);
+    END LOOP;
+END;
+
+[OUTPUT]
+
+1  Hartstein
+2  Fay
+3  Raphaely
+4  Khoo
+5  Baida
+6  Tobias
+7  Himuro
+8  Colmenares
+ 
+Value of Last Index in Nested Table: 8   Last Name at index: Colmenares
+ 
+Size of Nested Table after deletion of elements 4, 5 is: 7
+ 
+Value of Last Index in Nested Table: 9   Last Name at index: Lincoln
+ 
+1  Hartstein
+2  Fay
+3  Raphaely
+6  Tobias
+7  Himuro
+8  Colmenares
+9  Lincoln
+
+
+PL/SQL procedure successfully completed.

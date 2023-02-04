@@ -1,0 +1,246 @@
+Brian Salinas
+Assignment #3
+CSC 352
+
+Rem Q1.
+
+SET SERVEROUTPUT ON
+DECLARE
+    CURSOR c IS
+     	SELECT   LAST_NAME ||', ' || FIRST_NAME Full_name, SALARY, DEPARTMENT_ID
+    	FROM     EMPLOYEES
+        WHERE	 salary < 2500  
+    	ORDER BY salary DESC;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE(' No      Emp Full Name            Salary       Dept ID');    
+    DBMS_OUTPUT.PUT_LINE('----  ----------------------    --------     ---------');    
+
+    FOR indx IN c LOOP
+      DBMS_OUTPUT.PUT_LINE(rpad ( c%ROWCOUNT, 7) || RPAD (indx.Full_Name, 25) ||
+      to_char (indx.salary, '$99,999')||'        '||indx.department_ID);
+    END LOOP;
+
+[OUTPUT]
+
+No      Emp Full Name            Salary       Dept ID
+----  ----------------------    --------     ---------
+1      Landry, James              $2,400        50
+2      Gee, Ki                    $2,400        50
+3      Markle, Steven             $2,200        50
+4      Philtanker, Hazel          $2,200        50
+5      Olson, TJ                  $2,100        50
+
+
+PL/SQL procedure successfully completed.
+
+REM Q2.
+
+SET SERVEROUTPUT ON
+DECLARE
+    CURSOR C IS
+        SELECT SALARY, COMMISSION_PCT
+        FROM EMPLOYEES
+        WHERE DEPARTMENT_ID = 80;
+    variable_list   c%ROWTYPE;
+    bonus           FLOAT;
+    total_bonus     FLOAT;
+BEGIN
+    total_bonus := 0;
+    OPEN c;
+        LOOP
+        FETCH c into variable_list;
+        EXIT WHEN c%NOTFOUND;
+        
+        IF variable_list.COMMISSION_PCT >= .25 THEN
+            IF variable_list.SALARY >= 10000 THEN
+                bonus := 1000;
+            ELSIF variable_list.SALARY >= 7000 THEN
+                bonus := 800;
+            ELSE
+                bonus := 600;
+            END IF;
+        ELSIF (variable_list.COMMISSION_PCT < .25 and variable_list.COMMISSION_PCT >=.15) THEN
+            IF variable_list.SALARY >= 10000 THEN
+                bonus := 700;
+            ELSIF variable_list.SALARY >= 7000 THEN
+                bonus := 600;
+            ELSE
+                bonus := 500;
+            END IF;
+        ELSE
+            bonus := 450;
+        END IF;
+        
+        total_bonus := total_bonus + bonus;
+        bonus := 0;
+        END LOOP;
+    CLOSE c;
+    
+    DBMS_OUTPUT.PUT_LINE('Total Bonus: ' || TO_CHAR(total_bonus, '$999,999'));
+END;
+
+[OUTPUT]
+
+Total Bonus:   $24,900
+
+
+PL/SQL procedure successfully completed.
+
+Rem Q3.
+
+SET SERVEROUTPUT ON
+DECLARE
+   CURSOR C (owner_in IN varchar2, table_in IN varchar2) IS
+       SELECT column_name, data_type, data_length
+       FROM all_tab_columns
+       WHERE owner = owner_in and table_name = table_in;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Parameters: USER, "EMPLOYEES"');
+    FOR indx in c (USER, 'EMPLOYEES') LOOP
+        DBMS_OUTPUT.PUT_LINE('Column name: ' || RPAD(indx.column_name, 20) || 
+        ' Data Type: ' || RPAD(indx.data_type, 15) || ' Data Length: ' || 
+        indx.data_length);
+    END LOOP;
+    
+    DBMS_OUTPUT.PUT_LINE('-----------------------');
+    DBMS_OUTPUT.PUT_LINE('Parameters: USER, "DEPARTMENTS"');
+    FOR indx in c (USER, 'DEPARTMENTS') LOOP
+        DBMS_OUTPUT.PUT_LINE('Column name: ' || RPAD(indx.column_name, 20) || 
+        ' Data Type: ' || RPAD(indx.data_type, 15) || ' Data Length: ' || 
+        indx.data_length);
+    END LOOP;
+END;
+
+[OUTPUT]
+
+Parameters: USER, "EMPLOYEES"
+Column name: EMPLOYEE_ID          Data Type: NUMBER          Data Length: 22
+Column name: FIRST_NAME           Data Type: VARCHAR2        Data Length: 20
+Column name: LAST_NAME            Data Type: VARCHAR2        Data Length: 25
+Column name: EMAIL                Data Type: VARCHAR2        Data Length: 25
+Column name: PHONE_NUMBER         Data Type: VARCHAR2        Data Length: 20
+Column name: HIRE_DATE            Data Type: DATE            Data Length: 7
+Column name: JOB_ID               Data Type: VARCHAR2        Data Length: 10
+Column name: SALARY               Data Type: NUMBER          Data Length: 22
+Column name: COMMISSION_PCT       Data Type: NUMBER          Data Length: 22
+Column name: MANAGER_ID           Data Type: NUMBER          Data Length: 22
+Column name: DEPARTMENT_ID        Data Type: NUMBER          Data Length: 22
+-----------------------
+Parameters: USER, "DEPARTMENTS"
+Column name: DEPARTMENT_ID        Data Type: NUMBER          Data Length: 22
+Column name: DEPARTMENT_NAME      Data Type: VARCHAR2        Data Length: 30
+Column name: MANAGER_ID           Data Type: NUMBER          Data Length: 22
+Column name: LOCATION_ID          Data Type: NUMBER          Data Length: 22
+
+
+PL/SQL procedure successfully completed.
+
+Rem Q4.
+
+SET SERVEROUTPUT ON
+DECLARE
+    CURSOR c IS
+        SELECT employee_id, last_name, salary, commission_pct
+        FROM EMPLOYEES
+        FOR UPDATE OF salary;
+    
+    emp_id              EMPLOYEES.employee_id%TYPE;
+    l_name              EMPLOYEES.last_name%TYPE;
+    current_salary      EMPLOYEES.salary%TYPE;
+    new_salary          EMPLOYEES.salary%TYPE;
+    comm_pct            EMPLOYEES.commission_pct%TYPE;
+BEGIN
+    new_salary := 0;
+    OPEN c;
+    LOOP
+        FETCH c INTO emp_id, l_name, current_salary, comm_pct;
+        EXIT WHEN c%NOTFOUND;
+        IF (current_salary < 2450 AND comm_pct is null) THEN
+            new_salary := current_salary * 1.11;
+            UPDATE EMPLOYEES
+                SET SALARY = new_salary
+                WHERE current of c;
+            DBMS_OUTPUT.PUT_LINE('Employee ID: ' || RPAD(emp_id, 5) || 
+            ' Last Name: ' || RPAD(l_name, 15) || 'Old Salary: ' || 
+            TO_CHAR(current_salary, '$999,999') || 'New Salary: ' || 
+            TO_CHAR(new_salary, '$999,999'));
+        END IF;
+        
+    END LOOP;
+    CLOSE c;
+    ROLLBACK;
+            
+END;
+
+[OUTPUT]
+
+Employee ID: 127   Last Name: Landry         Old Salary:    $2,400 New Salary:    $2,664
+Employee ID: 128   Last Name: Markle         Old Salary:    $2,200 New Salary:    $2,442
+Employee ID: 132   Last Name: Olson          Old Salary:    $2,100 New Salary:    $2,331
+Employee ID: 135   Last Name: Gee            Old Salary:    $2,400 New Salary:    $2,664
+Employee ID: 136   Last Name: Philtanker     Old Salary:    $2,200 New Salary:    $2,442
+
+
+PL/SQL procedure successfully completed.
+
+Rem Q5.
+
+SET SERVEROUTPUT ON
+DECLARE
+    cv              SYS_REFCURSOR;
+    v_lname         EMPLOYEES.LAST_NAME%TYPE;
+    v_fname         EMPLOYEES.FIRST_NAME%TYPE;
+    v_sal           EMPLOYEES.SALARY%TYPE;
+    dep_id          EMPLOYEES.DEPARTMENT_ID%TYPE;
+    
+    query_2         VARCHAR2(200) :=
+            'SELECT *  FROM employees
+	WHERE commission_pct is null and salary > 15000
+	ORDER BY employee_id';
+    
+    v_employees     EMPLOYEES%ROWTYPE;
+
+BEGIN
+    dep_id := 30;
+    OPEN cv FOR
+        SELECT *  FROM employees
+        WHERE department_id = dep_id
+        ORDER BY last_name;
+    
+    LOOP
+        FETCH cv INTO v_employees;
+        EXIT WHEN cv%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Employee ID: ' || RPAD(v_employees.employee_id, 4) || 
+        ' Name: ' || v_employees.last_name || ', ' || RPAD(v_employees.first_name, 15) || 
+        ' Department ID: ' || v_employees.department_id);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('--------------------------');
+    
+    OPEN cv FOR query_2;
+    
+    LOOP
+        FETCH cv INTO v_employees;
+        EXIT WHEN cv%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Employee ID: ' || RPAD(v_employees.employee_id, 4) || 
+        ' Name: ' || v_employees.last_name || ', ' || RPAD(v_employees.first_name, 15) || 
+        ' Salary: ' || TO_CHAR(v_employees.salary, '$999,999'));
+    END LOOP;
+    CLOSE cv;
+    
+END;
+
+[OUTPUT]
+
+Employee ID: 116  Name: Baida, Shelli          Department ID: 30
+Employee ID: 119  Name: Colmenares, Karen           Department ID: 30
+Employee ID: 118  Name: Himuro, Guy             Department ID: 30
+Employee ID: 115  Name: Khoo, Alexander       Department ID: 30
+Employee ID: 114  Name: Raphaely, Den             Department ID: 30
+Employee ID: 117  Name: Tobias, Sigal           Department ID: 30
+--------------------------
+Employee ID: 100  Name: King, Steven          Salary:   $24,000
+Employee ID: 101  Name: Kochhar, Neena           Salary:   $17,000
+Employee ID: 102  Name: De Haan, Lex             Salary:   $17,000
+
+
+PL/SQL procedure successfully completed.

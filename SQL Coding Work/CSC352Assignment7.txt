@@ -1,0 +1,212 @@
+Brian Salinas
+CSC 352
+Assignment #7
+
+REM Q1.
+
+DROP TRIGGER Empl_delete;
+DROP TABLE Empl_log;
+
+CREATE TABLE      Empl_log(
+   Updated_Date	DATE default SYSDATE,
+   Updated_By	Varchar2 (15) default USER,
+   Action       Varchar2 (30)
+);
+
+CREATE OR REPLACE TRIGGER Empl_delete
+AFTER DELETE ON EMPLOYEES
+BEGIN
+    INSERT INTO Empl_log(Updated_date, Updated_by, Action)
+        VALUES (SYSDATE, USER, 'DELETE STATEMENT ON TABLE');
+END Empl_delete;
+/
+
+DELETE employees WHERE employee_id = 105;
+
+[OUTPUT]
+
+  |UPDATED_DATE | UPDATED_BY | ACTION
+
+1 |01-JUN-22    | BSALINA3   | DELETE STATEMENT ON TABLE
+
+REM Q2.
+
+DROP TRIGGER Empl_del_row;
+DROP TABLE Empl_Del_log;
+
+CREATE TABLE Empl_Del_log (
+   OLD_Empno     number (6),
+   OLD_fname     varchar2 (20),
+   OLD_lname     varchar2 (25),
+   OLD_sal       number (8, 2),
+   OLD_mgrno     number  (6),  
+   Updated_Date	 DATE,
+   Updated_By	 varchar2 (15),
+   Action        varchar2 (30)
+);
+
+
+CREATE OR REPLACE TRIGGER Empl_del_row
+    AFTER DELETE ON EMPLOYEES
+    FOR EACH ROW
+BEGIN
+    INSERT INTO Empl_Del_log VALUES
+        (:OLD.employee_id, :OLD.first_name, :OLD.last_name, :OLD.salary,
+        :OLD.manager_id, SYSDATE, USER, 'DELETED ROW ON TABLE');
+END Empl_del_row;
+/
+
+DELETE employees WHERE employee_id = 105;
+
+[OUTPUT]
+
+  | OLD_EMPNO | OLD_FNAME | OLD_LNAME | OLD_SAL | OLD_MGRNO | UPDATED_DATE | UPDATED_BY | ACTION
+
+1 | 105	 | David     | Austin    | 4800	  | 103	 |  01-JUN-22	   | BSALINA3   | DELETED ROW ON TABLE
+
+REM Q3.
+
+DROP TRIGGER Dept_Change;
+DROP TABLE Dept_log;
+
+CREATE TABLE      Dept_log(
+   OLD_Deptno     number (4),
+   NEW_Deptno     number (4),
+   OLD_Deptname   varchar2 (30),
+   NEW_Deptname   varchar2 (30),
+   OLD_MgrID      number (6),
+   NEW_MgrID      number (6),
+   OLD_LocID      number (4),
+   NEW_LocID      number (4),
+   Updated_Date	  DATE,
+   Updated_By	  varchar2 (15),
+   Action         varchar2 (25)
+);
+
+CREATE OR REPLACE TRIGGER Dept_Change
+    AFTER INSERT OR DELETE OR UPDATE OF manager_id, location_id ON DEPARTMENTS
+    FOR EACH ROW
+    BEGIN
+        IF INSERTING THEN
+            INSERT INTO Dept_log (NEW_Deptno, NEW_Deptname, NEW_MgrID, 
+            NEW_LocID, Updated_Date, Updated_By, Action)
+            VALUES (:NEW.department_id, :NEW.department_name, :NEW.manager_id, 
+            :NEW.location_id, SYSDATE, USER, 'INSERT ON TABLE');
+        ELSIF DELETING THEN
+            INSERT INTO Dept_log (OLD_Deptno, OLD_Deptname, OLD_MgrID, 
+            OLD_LocID, Updated_Date, Updated_By, Action)
+            VALUES (:OLD.department_id, :OLD.department_name, :OLD.manager_id, 
+            :OLD.location_id, SYSDATE, USER, 'DELETE ON TABLE');
+        ELSIF UPDATING('manager_id') THEN
+            INSERT INTO Dept_log VALUES
+            (:OLD.department_id, :NEW.department_id, :OLD.department_name, 
+            :NEW.department_name, :OLD.manager_id, :NEW.manager_id, 
+            :OLD.location_id, :NEW.location_id, SYSDATE, USER,
+            'MANAGER_ID CHANGED');
+        ELSIF UPDATING('location_id') THEN
+            INSERT INTO Dept_log VALUES
+            (:OLD.department_id, :NEW.department_id, :OLD.department_name, 
+            :NEW.department_name, :OLD.manager_id, :NEW.manager_id, 
+            :OLD.location_id, :NEW.location_id, SYSDATE, USER,
+            'LOCATION_ID CHANGED');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('SOMETHING GOES WRONG');
+        END IF;
+END Dept_Change;
+/
+
+Column OLD_Deptname format A10
+Column NEW_Deptname format A10
+
+SELECT * from Dept_log ;
+
+INSERT INTO departments VALUES (290, 'Test', null, 1700);
+
+UPDATE departments set manager_id = 103   WHERE department_id = 290;
+UPDATE departments set location_id = 1800 WHERE department_id = 290;
+
+DELETE departments where department_id = 290;
+SELECT * from Dept_log ;
+
+rollback;
+
+[OUTPUT]
+
+OLD_DEPTNO	NEW_DEPTNO	OLD_DEPTNAME	NEW_DEPTNAME	OLD_MGRID	NEW_MGRID	OLD_LOCID	NEW_LOCID	UPDATED_DATE	UPDATED_BY	ACTION
+		290				Test								1700		01-JUN-22	BSALINA3	INSERT ON TABLE
+290		290			Test	Test				103		1700		1700		01-JUN-22	BSALINA3	MANAGER_ID CHANGED
+290		290			Test	Test		103		103		1700		1800		01-JUN-22	BSALINA3	LOCATION_ID CHANGED
+290					Test			103				1800				01-JUN-22	BSALINA3	DELETE ON TABLE
+
+REM Q4.
+
+CREATE OR REPLACE PACKAGE Pkg_Dept_Head
+IS
+    FUNCTION Dept_Head_FName
+    ( Deptno    IN  NUMBER)
+    RETURN varchar2;
+    
+    FUNCTION Dept_Head_Fname
+    (Dept_name  IN  varchar2)
+    RETURN varchar2;
+    
+END Pkg_Dept_Head;
+/
+
+CREATE OR REPLACE PACKAGE BODY Pkg_Dept_Head
+IS
+    Function Dept_Head_FName 
+    ( Deptno      IN   number)
+    RETURN varchar2
+    IS
+    Dept_Head_fullname   varchar2 (47);
+   	
+    BEGIN
+        SELECT  first_name ||' '|| last_name INTO Dept_Head_fullname
+        FROM    employees    WHERE   employee_id = 
+        (select manager_id     from   departments   where  department_id = Deptno);
+        RETURN Dept_Head_fullname;
+    END Dept_Head_FName ;
+
+
+    Function Dept_Head_FName 
+    ( Dept_name     IN   varchar2)
+    RETURN varchar2
+    IS
+    Dept_Head_fullname   varchar2 (47);
+   	
+    BEGIN
+        SELECT  first_name ||' '|| last_name INTO Dept_Head_fullname
+        FROM    employees    WHERE   employee_id = 
+        (select manager_id     from   departments   
+        where  upper (department_name) = upper (Dept_name));
+        RETURN Dept_Head_fullname;
+    END Dept_Head_FName ;
+END Pkg_Dept_Head;
+/
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    dept_pkg1   varchar2(47);
+    dept_pkg2   varchar2(47);
+BEGIN
+    dept_pkg1 := Pkg_Dept_Head.dept_head_fname(60);
+    dept_pkg2 := Pkg_Dept_Head.dept_head_fname('IT');
+    
+    DBMS_OUTPUT.PUT_LINE(dept_pkg1);
+    DBMS_OUTPUT.PUT_LINE(dept_pkg2);
+End;
+
+[OUTPUT]
+
+Package PKG_DEPT_HEAD compiled
+
+
+Package Body PKG_DEPT_HEAD compiled
+
+Alexander Hunold
+Alexander Hunold
+
+
+PL/SQL procedure successfully completed.

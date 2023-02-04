@@ -1,0 +1,287 @@
+Brian Salinas
+Assignment #2
+CSC 352
+
+Rem Q1.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    dep_id   DEPARTMENTS.DEPARTMENT_ID%TYPE := 111;
+    dep_name DEPARTMENTS.DEPARTMENT_NAME%TYPE := 'Fortest';
+    man_id      DEPARTMENTS.MANAGER_ID%TYPE := 100;
+    loc_id     DEPARTMENTS.LOCATION_ID%TYPE := 1700;
+BEGIN
+    INSERT INTO DEPARTMENTS (DEPARTMENT_ID, DEPARTMENT_NAME, MANAGER_ID, LOCATION_ID)
+    VALUES (dep_id, dep_name, man_id, loc_id);
+    
+    DBMS_OUTPUT.PUT_LINE('New record into Departments table = Department ID: ' 
+    || dep_id || ', Department Name: ' || dep_name || ', Manager ID: ' || man_id
+    || ', Location ID: ' || loc_id || '.');
+    
+END;
+
+[OUTPUT]
+
+New record into Departments table = Department ID: 111, Department Name: Fortest, Manager ID: 100, Location ID: 1700.
+
+Rem Q2.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    dep_id   DEPARTMENTS.DEPARTMENT_ID%TYPE := 111;
+    dep_name DEPARTMENTS.DEPARTMENT_NAME%TYPE;
+    man_id      DEPARTMENTS.MANAGER_ID%TYPE;
+    loc_id     DEPARTMENTS.LOCATION_ID%TYPE := 1700;
+BEGIN
+    DELETE FROM DEPARTMENTS
+    WHERE DEPARTMENT_ID = dep_id
+    RETURNING DEPARTMENT_NAME, MANAGER_ID
+    INTO dep_name, man_id;
+    
+    DBMS_OUTPUT.PUT_LINE('After DELETION: the record deleted had DEPARTMENT_NAME = ' ||
+    dep_name || ', MANAGER_ID = ' || man_id || '.');
+    
+END;
+
+[OUTPUT]
+
+After DELETION: the record deleted had DEPARTMENT_NAME = Fortest, MANAGER_ID = 100.
+
+Rem Q3.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    dep_id   DEPARTMENTS.DEPARTMENT_ID%TYPE := 230;
+    dep_name DEPARTMENTS.DEPARTMENT_NAME%TYPE;
+BEGIN
+    UPDATE DEPARTMENTS
+    SET MANAGER_ID = 103
+    WHERE DEPARTMENT_ID = dep_id
+    RETURNING DEPARTMENT_NAME
+    INTO dep_name;
+    
+    DBMS_OUTPUT.PUT_LINE('The name of the Department that was updated was ' || dep_name || '.');
+    
+END;
+
+[OUTPUT]
+
+The name of the Department that was updated was IT Helpdesk.
+
+Rem Q4.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    dept_num INTEGER;
+    dept_size varchar2(20);
+BEGIN
+    SELECT count(*) INTO dept_num FROM EMPLOYEES
+    WHERE DEPARTMENT_ID = 80;
+     CASE
+        WHEN dept_num > 29 THEN dept_size := 'LARGE';
+        WHEN dept_num > 8 THEN dept_size := 'MEDIUM';
+        ELSE dept_size := 'SMALL';
+     END CASE;
+     DBMS_OUTPUT.PUT_LINE('Department size of Department with ID 80 is ' || dept_size || '.');
+END;
+
+[OUTPUT]
+
+Department size of Department with ID 80 is LARGE.
+
+Rem Q5.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    emp_id          EMPLOYEES.EMPLOYEE_ID%TYPE;
+    salary          EMPLOYEES.SALARY%TYPE;
+    base_bonus     FLOAT;
+    years           INTEGER;
+    years_bonus     FLOAT;
+    salary_bonus    FLOAT;
+    total_bonus     FLOAT;
+    
+BEGIN
+    base_bonus := 1000;
+
+    SELECT 	employee_id, salary, 
+		floor (months_between (sysdate, hire_date)/12) Years
+        INTO emp_id, salary, years
+    FROM 	employees
+    WHERE employee_id in (206);
+    
+    CASE
+        WHEN years > 26 THEN years_bonus := 700;
+        WHEN years > 25 THEN years_bonus := 500;
+        ELSE years_bonus := 0;
+    END CASE;
+    
+    CASE
+        WHEN salary > 10000 THEN salary_bonus := 1100;
+        WHEN salary > 4999  THEN salary_bonus := 1000;
+        ELSE salary_bonus := 900;
+    END CASE;
+    
+    total_bonus := base_bonus + salary_bonus + years_bonus;
+    
+    DBMS_OUTPUT.PUT_LINE('The bonus for employee with ID ' || emp_id || ' is ' || TO_CHAR(total_bonus, '$999,999'));
+
+END;
+
+[OUTPUT]
+
+The bonus for employee with ID 206 is    $2,700
+
+Rem Q6.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    counter1 INTEGER := 15;
+    counter2 INTEGER := 15;
+    
+BEGIN
+   LOOP
+    DBMS_OUTPUT.PUT_LINE('Inside Basic Loop: counter1 = ' || counter1);
+    EXIT WHEN counter1 > 16;
+    counter1 := counter1 + 1;
+   END LOOP;
+   
+   FOR i IN 15 .. 17 LOOP
+    DBMS_OUTPUT.PUT_LINE('Inside For Loop: i = ' || i);
+   END LOOP;
+   
+   WHILE counter2 < 18 LOOP
+    DBMS_OUTPUT.PUT_LINE('Inside While Loop: counter2 = ' || counter2);
+    counter2 := counter2 + 1;
+   END LOOP;
+   
+END;
+
+[OUTPUT]
+
+Inside Basic Loop: counter1 = 15
+Inside Basic Loop: counter1 = 16
+Inside Basic Loop: counter1 = 17
+Inside For Loop: i = 15
+Inside For Loop: i = 16
+Inside For Loop: i = 17
+Inside While Loop: counter2 = 15
+Inside While Loop: counter2 = 16
+Inside While Loop: counter2 = 17
+
+
+Rem Q7.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    counter1 INTEGER := 1;
+    counter2 INTEGER := 1;
+    
+BEGIN
+   WHILE counter1 < 9 LOOP
+    DBMS_OUTPUT.PUT('|');
+    counter1 := counter1 + 1;
+    
+    WHILE counter2 < 10 LOOP
+        DBMS_OUTPUT.PUT(' '|| counter1 || counter2 || ' ');
+        counter2 := counter2 + 1;
+    END LOOP;
+    
+    DBMS_OUTPUT.PUT_LINE('|');
+    
+    counter2 := 1;
+    
+   END LOOP;
+   
+END;
+
+
+[OUTPUT]
+
+| 21  22  23  24  25  26  27  28  29 |
+| 31  32  33  34  35  36  37  38  39 |
+| 41  42  43  44  45  46  47  48  49 |
+| 51  52  53  54  55  56  57  58  59 |
+| 61  62  63  64  65  66  67  68  69 |
+| 71  72  73  74  75  76  77  78  79 |
+| 81  82  83  84  85  86  87  88  89 |
+| 91  92  93  94  95  96  97  98  99 |
+
+
+Rem Q8.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    total_rows INTEGER;
+    total_deleted_rows INTEGER;
+
+BEGIN
+   UPDATE EMP_TEST
+   SET SALARY = SALARY + (SALARY * .10)
+   WHERE SALARY < 3000 AND DEPARTMENT_ID = 30;
+   
+   DBMS_OUTPUT.PUT_LINE('Updating Salaries');
+   
+   IF SQL%NOTFOUND THEN
+    DBMS_OUTPUT.PUT_LINE('No rows affected');
+   ELSIF SQL%FOUND THEN
+    total_rows := SQL%ROWCOUNT;
+    DBMS_OUTPUT.PUT_LINE(total_rows || ' rows affected');
+   END IF;
+   
+   DBMS_OUTPUT.PUT_LINE('Deleting Employees whos Department ID is 20');
+   
+   DELETE FROM EMP_TEST
+   WHERE department_id = 20;
+   
+   IF SQL%NOTFOUND THEN
+    DBMS_OUTPUT.PUT_LINE('No rows deleted');
+   ELSIF SQL%FOUND THEN
+    total_deleted_rows := SQL%ROWCOUNT;
+    DBMS_OUTPUT.PUT_LINE(total_deleted_rows || ' rows deleted');
+   END IF;
+   
+END;
+
+[OUTPUT]
+
+Updating Salaries
+4 rows affected
+Deleting Employees whos Department ID is 20
+2 rows deleted
+
+Rem Q9.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    r_emp   EMPLOYEES%ROWTYPE;
+    CURSOR c_employees 
+        IS SELECT * FROM EMPLOYEES WHERE DEPARTMENT_ID = 30;
+BEGIN
+    OPEN c_employees;
+    LOOP
+    FETCH c_employees INTO r_emp;
+        EXIT WHEN c_employees%notfound;
+        DBMS_OUTPUT.PUT_LINE(r_emp.EMPLOYEE_ID || ' ' || r_emp.LAST_NAME || ', ' || r_emp.FIRST_NAME || ' ' || TO_CHAR (r_emp.SALARY, '$999,999'));
+    END LOOP;
+    CLOSE c_employees;
+END;
+
+[OUTPUT]
+
+114 Raphaely, Den   $11,000
+115 Khoo, Alexander    $3,100
+116 Baida, Shelli    $2,900
+117 Tobias, Sigal    $2,800
+118 Himuro, Guy    $2,600
+119 Colmenares, Karen    $2,500
+

@@ -1,0 +1,198 @@
+Brian Salinas
+CSC 352
+Assignment #5
+
+REM Q1.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    TYPE Constrnt IS RECORD
+    ( T_name        VARCHAR2(30),
+      Const_name    VARCHAR2(30),
+      Const_type    char(1));
+      
+    Cursor C IS
+        SELECT table_name, constraint_name, constraint_type
+        FROM user_constraints
+        WHERE upper (table_name) in ( 'EMPLOYEES', 'DEPARTMENTS') ORDER BY 1;
+        
+    n1_const    Constrnt;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Row  Table_Name     Const_Name        Const_Type');
+    DBMS_OUTPUT.PUT_LINE('-----------------------------------------------');
+    
+    OPEN C;
+    LOOP
+        FETCH C INTO n1_const;
+        EXIT WHEN C%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE(RPAD (c%ROWCOUNT, 5) || 
+        RPAD(n1_const.T_name, 15) || RPAD(n1_const.Const_name, 18) || 
+        RPAD(n1_const.Const_type, 10));
+    END LOOP;
+    CLOSE C;
+END;
+
+[OUTPUT]
+
+Row  Table_Name     Const_Name        Const_Type
+-----------------------------------------------
+1    DEPARTMENTS    DEPT_NAME_NN      C         
+2    DEPARTMENTS    DEPT_ID_PK        P         
+3    DEPARTMENTS    DEPT_MGR_FK       R         
+4    DEPARTMENTS    DEPT_LOC_FK       R         
+5    EMPLOYEES      EMP_EMAIL_NN      C         
+6    EMPLOYEES      EMP_HIRE_DATE_NN  C         
+7    EMPLOYEES      EMP_JOB_NN        C         
+8    EMPLOYEES      EMP_SALARY_MIN    C         
+9    EMPLOYEES      EMP_EMAIL_UK      U         
+10   EMPLOYEES      EMP_EMP_ID_PK     P         
+11   EMPLOYEES      EMP_MANAGER_FK    R         
+12   EMPLOYEES      EMP_JOB_FK        R         
+13   EMPLOYEES      EMP_DEPT_FK       R         
+14   EMPLOYEES      EMP_LAST_NAME_NN  C         
+
+
+PL/SQL procedure successfully completed.
+
+REM Q2.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    TYPE DEPT_INFO IS RECORD
+    ( dept_id   DEPARTMENTS.DEPARTMENT_ID%TYPE,
+      dept_name DEPARTMENTS.DEPARTMENT_NAME%TYPE,
+      total_emp NUMBER(6));
+      
+    v   DEPT_INFO;
+    
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Dept_ID   Dept_Name Total Employees');
+    SELECT e.department_id , d.department_name, COUNT (e.employee_id) total
+        INTO   v
+        FROM   employees e, departments d
+        WHERE  e.department_id = d.department_id and e.department_id = 60
+        GROUP BY e.department_id , d.department_name;
+        
+    DBMS_OUTPUT.PUT_LINE( RPAD( v.dept_id, 10) || RPAD(v.dept_name, 10) ||
+        RPAD(v.total_emp, 5));
+END;
+
+[OUTPUT]
+
+Dept_ID   Dept_Name Total Employees
+60        IT        5    
+
+
+PL/SQL procedure successfully completed.
+
+
+REM Q3.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    TYPE DEPT_INFO IS RECORD
+    ( dept_id   DEPARTMENTS.DEPARTMENT_ID%TYPE,
+      dept_name DEPARTMENTS.DEPARTMENT_NAME%TYPE,
+      total_emp NUMBER(6));
+      
+    v   DEPT_INFO;
+    
+    TYPE Dept_Info_NT IS TABLE OF DEPT_INFO;
+    
+    LIST Dept_Info_NT := Dept_Info_NT(  );
+    
+    CURSOR C IS
+        SELECT e.department_id , d.department_name dname, count (e.employee_id) total
+        FROM   employees e, departments d
+        WHERE  e.department_id = d.department_id AND d.manager_id IS NOT NULL
+        GROUP BY e.department_id, d.department_name
+        ORDER BY 1;
+
+    counter integer := 0;
+BEGIN
+    FOR indx in C LOOP
+        counter := counter + 1;
+        LIST.extend;
+        LIST(counter) := indx;
+    END LOOP;
+    
+    DBMS_OUTPUT.PUT_LINE('Dept_ID   Dept_Name           Total Employees');
+    FOR i IN LIST.FIRST .. LIST.LAST LOOP
+        DBMS_OUTPUT.PUT_LINE(RPAD(LIST(i).dept_id, 10) || 
+        RPAD(LIST(i).dept_name, 20) || LIST(i).total_emp);
+    END LOOP;
+END;
+
+[OUTPUT]
+
+Dept_ID   Dept_Name           Total Employees
+10        Administration      1
+20        Marketing           2
+30        Purchasing          6
+40        Human Resources     1
+50        Shipping            45
+60        IT                  5
+70        Public Relations    1
+80        Sales               34
+90        Executive           3
+100       Finance             6
+110       Accounting          2
+
+
+PL/SQL procedure successfully completed.
+
+
+REM Q4.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    dept_id_num     DEPARTMENTS.department_id%TYPE := 60;
+    dept_full_name  EMPLOYEES.first_name%TYPE;
+    
+    PROCEDURE Dept_Head_Name (
+        Dept_id             IN  DEPARTMENTS.department_id%TYPE,
+        Dept_Head_fullname  OUT EMPLOYEES.first_name%TYPE
+        ) IS
+    BEGIN
+        SELECT  first_name ||' '|| last_name as dept_fullname
+        INTO    Dept_Head_fullname
+        FROM    employees  e, departments d
+        WHERE   e.employee_id = d.manager_id and e.department_id = Dept_id; 
+
+        
+        DBMS_OUTPUT.PUT_LINE(TO_CHAR(Dept_Head_fullname));
+    END Dept_Head_Name;
+    
+BEGIN
+    Dept_Head_Name(dept_id_num);
+END;
+
+REM Q5.
+
+SET SERVEROUTPUT ON
+
+CREATE OR REPLACE PROCEDURE Dept_Head_Name (
+    Dept_id             IN  DEPARTMENTS.department_id%TYPE,
+    Dept_Head_fullname  OUT EMPLOYEES.first_name%TYPE
+    ) IS
+BEGIN
+    SELECT  first_name ||' '|| last_name as dept_fullname
+    INTO    Dept_Head_fullname
+    FROM    employees  e, departments d
+    WHERE   e.employee_id = d.manager_id and e.department_id = Dept_id; 
+    
+    DBMS_OUTPUT.PUT_LINE(TO_CHAR(Dept_Head_fullname));
+END Dept_Head_Name;
+/
+DECLARE
+    dept_id_num     CONSTANT DEPARTMENTS.department_id%TYPE := 60;
+    dept_full_name  EMPLOYEES.first_name%TYPE;
+    
+BEGIN
+    Dept_Head_Name(dept_id_num);
+END;
+

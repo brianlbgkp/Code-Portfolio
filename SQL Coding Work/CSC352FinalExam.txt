@@ -1,0 +1,271 @@
+Brian Salinas
+CSC 352
+Final Exam
+
+Part I.
+1. (d).
+2. (b).
+3. (a).
+4. (e).
+5. (d).
+
+Part II.
+
+REM Q1.
+
+SET SERVEROUTPUT ON
+
+CREATE OR REPLACE PROCEDURE Emp_boss (
+        empno       IN  number,
+        emplname    OUT EMPLOYEES.last_name%TYPE,
+        mgrno       OUT EMPLOYEES.manager_id%TYPE,
+        mgrlname    OUT EMPLOYEES.last_name%TYPE
+        ) IS
+    BEGIN
+        SELECT last_name, manager_id
+        INTO emplname, mgrno
+        FROM EMPLOYEES
+        WHERE employee_id = empno;
+        
+        SELECT last_name
+        INTO mgrlname
+        FROM EMPLOYEES
+        WHERE employee_id = mgrno;
+END;
+/
+
+DECLARE
+    e_lname     EMPLOYEES.last_name%TYPE;
+    mgr_id      EMPLOYEES.manager_id%TYPE;
+    mgr_lname   EMPLOYEES.last_name%TYPE;
+    
+    CURSOR C IS
+    SELECT employee_id FROM EMPLOYEES WHERE salary <= 2300;
+    
+BEGIN
+    DBMS_OUTPUT.PUT_LINE (' Employee ID  Last Name   Manager Id  Manager Last Name ');
+    DBMS_OUTPUT.PUT_LINE ('------------ ----------- ----------- ------------------  ');
+    
+    FOR indx in C LOOP
+        Emp_boss(indx.employee_id, e_lname, mgr_id, mgr_lname);
+        DBMS_OUTPUT.PUT_LINE(RPAD(indx.employee_id, 13) || RPAD(e_lname, 12) 
+        || RPAD(mgr_id, 12) || RPAD(mgr_lname,15) );
+    END LOOP;
+    
+END;
+
+[OUTPUT]
+
+
+Procedure EMP_BOSS compiled
+
+Employee ID  Last Name   Manager Id  Manager Last Name 
+------------ ----------- ----------- ------------------  
+128          Markle      120         Weiss          
+132          Olson       121         Fripp          
+136          Philtanker  122         Kaufling       
+
+
+PL/SQL procedure successfully completed.
+
+REM Q2.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    emp_lname   EMPLOYEES.last_name%TYPE;
+    sal         EMPLOYEES.salary%TYPE;
+
+    PROCEDURE Emp_data (
+        id_in       IN  number,
+        lastname    OUT EMPLOYEES.last_name%TYPE,
+        salary      OUT EMPLOYEES.salary%TYPE
+        ) IS
+    BEGIN
+        SELECT last_name, salary
+        INTO lastname, salary
+        FROM EMPLOYEES
+        WHERE employee_id = id_in;
+        
+    END Emp_data;
+    
+    PROCEDURE Emp_data (
+        email_in    IN  varchar2,
+        lastname    OUT EMPLOYEES.last_name%TYPE,
+        salary      OUT EMPLOYEES.salary%TYPE
+        ) IS
+    BEGIN
+        SELECT last_name, salary
+        INTO lastname, salary
+        FROM EMPLOYEES
+        WHERE email = email_in;
+        
+    END Emp_data;
+BEGIN
+    Emp_data(100, emp_lname, sal);
+    DBMS_OUTPUT.PUT_LINE (' Employee ID  Last Name    SALARY  ');
+    DBMS_OUTPUT.PUT_LINE ('------------ -----------  ---------');
+    DBMS_OUTPUT.PUT_LINE(RPAD(100, 13) || RPAD(emp_lname, 12) 
+        || To_char(sal, '$99,999') );
+        
+    DBMS_OUTPUT.PUT_LINE( '===================================');
+        
+    Emp_data('SKING', emp_lname, sal);
+    DBMS_OUTPUT.PUT_LINE ('Employee Email Last Name    SALARY  ');
+    DBMS_OUTPUT.PUT_LINE ('-------------- -----------  ---------');
+    DBMS_OUTPUT.PUT_LINE(RPAD('SKING', 15) || RPAD(emp_lname, 12) 
+        || To_char(sal, '$99,999') );
+END;
+    
+[OUTPUT]
+
+Employee ID  Last Name    SALARY  
+------------ -----------  ---------
+100          King         $24,000
+===================================
+Employee Email Last Name    SALARY  
+-------------- -----------  ---------
+SKING          King         $24,000
+
+
+PL/SQL procedure successfully completed.
+
+REM Q3.
+
+SET SERVEROUTPUT ON
+
+CREATE OR REPLACE PACKAGE Pkg_EMP_info
+IS
+    TYPE EMP_Name_dname IS RECORD
+    ( empno     EMPLOYEES.employee_id%TYPE,
+      full_name EMPLOYEES.first_name%TYPE,
+      dept_name DEPARTMENTS.department_name%TYPE);
+      
+    FUNCTION Emp_Name_Dept
+    ( id_in    IN  EMPLOYEES.employee_id%TYPE)
+    RETURN EMP_Name_dname;
+    
+END Pkg_Emp_info;
+/
+
+CREATE OR REPLACE PACKAGE BODY Pkg_EMP_info
+IS
+    Function EMP_Name_Dept
+    ( id_in IN  EMPLOYEES.employee_id%TYPE)
+    RETURN EMP_Name_dname
+    IS
+    dept_name   EMP_Name_dname;
+    
+    BEGIN
+        SELECT e.employee_id, e.first_name ||' '|| e.last_name as full_name, 
+        d.department_name
+        INTO dept_name.empno, dept_name.full_name, dept_name.dept_name
+        FROM EMPLOYEES e, DEPARTMENTS d WHERE d.department_id = id_in 
+        AND e.department_id = id_in;
+        RETURN dept_name;
+    END EMP_Name_Dept;
+END Pkg_EMP_info;
+/
+
+DECLARE
+    dept_name   Pkg_EMP_info.EMP_Name_dname;
+    
+BEGIN
+    dept_name := Pkg_EMP_info.EMP_Name_Dept(60);
+    
+    DBMS_OUTPUT.PUT_LINE('-----------');
+
+    DBMS_OUTPUT.PUT_LINE(RPAD(dept_name.empno, 10) || 
+    RPAD(dept_name.full_name, 20) || dept_name.dept_name);
+END;
+        
+
+
+[OUTPUT]
+
+FAILED TO GET AN OUTPUT. RECIEVED THE ERROR FOR FETCHING TOO MANY ROWS. I BELIEVE THIS IS AN ISSUE
+FOR THE FUNCTION CALL NOT BEING ABLE TO INSERT THE WHOLE OF THE SQL STATEMENT INTO THE RECORD. THEN
+I DID NOT KNOW HOW TO OUTPUT ALL THE VALUES OF THE RECORDS. INCLUDED EVERYTHING I HAD.
+
+
+REM Q4.
+
+SET SERVEROUTPUT ON
+
+DROP TABLE Emp_log;
+
+CREATE TABLE Emp_log(
+    EmpID           number (4),
+    lname           varchar2 (15),
+    OLD_MgrID       number (6),
+    NEW_MgrID       number (6),
+    Updated_Date	DATE,
+    Updated_By	    varchar2 (15),
+    Action          varchar2 (25)
+);
+
+CREATE OR REPLACE TRIGGER Employee_trg
+    AFTER INSERT OR UPDATE OF manager_id ON EMPLOYEES
+    FOR EACH ROW
+    BEGIN
+        IF INSERTING THEN
+            INSERT INTO Emp_log VALUES 
+            (:NEW.employee_id, :NEW.last_name, null, :NEW.manager_id, 
+            SYSDATE, USER, 'INSERT ON TABLE');
+        ELSIF UPDATING('manager_id') THEN
+            INSERT INTO Emp_log VALUES
+            (:NEW.employee_id, :NEW.last_name, :OLD.manager_id, :NEW.manager_id, 
+            SYSDATE, USER, 'MANAGER_ID CHANGED');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('SOMETHING GOES WRONG');
+        END IF;
+END Employee_trg;
+/
+
+UPDATE employees set manager_id = 120 WHERE department_id = 90;
+
+INSERT INTO employees VALUES 
+(300, 'Fred', 'Adams', 'Fadams', '515.123.5555', '11-MAY-2022', 'IT_PROG', 50000, NULL, NULL, 60);
+
+SELECT * from Emp_log;
+
+--rollback;
+
+[OUTPUT]
+
+     EMPID LNAME            OLD_MGRID  NEW_MGRID UPDATED_D UPDATED_BY      ACTION                   
+---------- --------------- ---------- ---------- --------- --------------- -------------------------
+       100 King                              120 08-JUN-22 BSALINA3        MANAGER_ID CHANGED       
+       101 Kochhar                100        120 08-JUN-22 BSALINA3        MANAGER_ID CHANGED       
+       102 De Haan                100        120 08-JUN-22 BSALINA3        MANAGER_ID CHANGED       
+       300 Adams                                 08-JUN-22 BSALINA3        INSERT ON TABLE      
+
+
+REM Q5.
+
+SET SERVEROUTPUT ON
+
+DECLARE
+    Query_str   varchar2(2000);
+    total       number;
+    mgr_id      number := 103;
+BEGIN
+
+    Query_str := 'SELECT count(*) FROM EMPLOYEES WHERE manager_id = :mgr_id';
+    EXECUTE IMMEDIATE Query_str
+        INTO total
+        USING mgr_id;
+        
+    DBMS_OUTPUT.PUT_LINE('The number of employees who work for manager ID '|| 
+    mgr_id || ' is: '|| total);
+END;
+    
+
+[OUTPUT]
+
+The number of employees who work for manager ID 103 is: 4
+
+
+PL/SQL procedure successfully completed.
+
+

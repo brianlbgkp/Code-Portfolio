@@ -1,0 +1,131 @@
+Brian Salinas
+CSC 352
+Assignment #4
+
+Q1
+1. T
+2. F
+3. T
+4. T
+5. T
+6. T
+7. F
+
+Q2
+(1) B
+(2) D
+
+Rem Q3.
+
+SET SERVEROUTPUT ON
+DECLARE
+    Exceed_Limit    EXCEPTION;
+    counter         INTEGER := 1;
+
+BEGIN
+
+    LOOP
+        IF counter > 10 THEN 
+            RAISE Exceed_Limit;
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('Counter value = ' || counter);
+            counter := counter + 2;
+        END IF;
+    END LOOP;
+EXCEPTION
+    WHEN Exceed_Limit THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR: Counter has exceeded vaalue of 10');
+END;
+
+[OUTPUT]
+
+Counter value = 1
+Counter value = 3
+Counter value = 5
+Counter value = 7
+Counter value = 9
+ERROR: Counter has exceeded vaalue of 10
+
+
+PL/SQL procedure successfully completed.
+
+Rem Q4.
+
+SET SERVEROUTPUT ON
+DECLARE
+    Sal_Below_Min   EXCEPTION;
+    CURSOR c IS
+     SELECT employee_id, salary
+     FROM EMPLOYEES
+     WHERE job_id = 'IT_PROG';
+    emp_id          EMPLOYEES.employee_id%TYPE;
+    sal             EMPLOYEES.salary%TYPE;
+BEGIN
+    OPEN c;
+    LOOP
+        FETCH c INTO emp_id, sal;
+        EXIT WHEN c%NOTFOUND;
+        IF sal < 5000 THEN 
+            RAISE Sal_Below_Min;
+        END IF;
+    END LOOP;
+    CLOSE c;
+EXCEPTION
+    WHEN Sal_Below_Min THEN
+        DBMS_OUTPUT.PUT_LINE('Salary Below Minimum for Employee ID: ' || emp_id || '. Their salary is currently: ' || to_char(sal, '$99,999'));
+END;
+
+[OUTPUT]
+
+Salary Below Minimum for Employee ID: 105. Their salary is currently:   $4,800
+
+
+PL/SQL procedure successfully completed.
+
+Rem Q5.
+
+SET SERVEROUTPUT ON
+DROP TABLE log_error;
+
+CREATE TABLE log_error (
+  Occur_date  DATE DEFAULT SYSDATE,
+  Username    VARCHAR2 (15) DEFAULT USER,
+  Err_code    NUMBER,
+  Err_msg     VARCHAR2 (255));
+
+DECLARE
+    Err_code    NUMBER;
+    Err_msg     VARCHAR2 (255);
+BEGIN
+    DELETE FROM EMPLOYEES WHERE employee_id = 104;
+    DELETE FROM EMPLOYEES WHERE employee_id = 123;
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        Err_code := SQLCODE;
+        Err_msg := SUBSTR(SQLERRM, 1, 64);
+        
+        DBMS_OUTPUT.PUT_LINE('Error code ' || Err_code || ': ' || Err_msg);
+        
+        INSERT INTO log_error (Err_code, Err_msg)
+        VALUES (Err_code, Err_msg);
+END;
+
+[OUTPUT]
+
+Table LOG_ERROR dropped.
+
+
+Table LOG_ERROR created.
+
+Error code -2292: ORA-02292: integrity constraint (BSALINA3.EMP_MANAGER_FK) violat
+
+
+PL/SQL procedure successfully completed.
+
+
+[TABLE OUTPUT]
+
+OCCUR_DATE  USERNAME    ERR_CODE  ERR_MSG
+
+27-APR-22	BSALINA3	-2292	    ORA-02292: integrity constraint (BSALINA3.EMP_MANAGER_FK) violat
